@@ -1,7 +1,6 @@
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 from text import TOKEN
-# Обработчик команды /start
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
