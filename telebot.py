@@ -1,25 +1,35 @@
-from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+# Импорт вашей модели
 from text import TOKEN
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
+import os
+import django
+from asgiref.sync import sync_to_async
+
+# Установите переменную окружения DJANGO_SETTINGS_MODULE и настройте Django
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = [
         [KeyboardButton("Отправить геолокацию", request_location=True)],
-        [KeyboardButton("Обзор")],]
+        [KeyboardButton("Обзор")],
+    ]
     reply_markup = ReplyKeyboardMarkup(
         keyboard, resize_keyboard=True, one_time_keyboard=True)
     await update.message.reply_text("Пожалуйста, отправьте вашу геолокацию:", reply_markup=reply_markup)
-# Обработчик получения геолокации
 
 
 async def location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     print("Получено сообщение с данными")  # Проверка вызова обработчика
     user_location = update.message.location
     if user_location:
+        user_id = update.message.from_user.id
         latitude = user_location.latitude
         longitude = user_location.longitude
-        # Сохранение данных, например, в базу данных или файл
+
+        # Сохранение данных в базу данных (асинхронно)
+        await sync_to_async(UserLocation.objects.create)(user_id=user_id, latitude=latitude, longitude=longitude)
+
         print(
             f"Пользователь отправил геолокацию: широта={latitude}, долгота={longitude}")
         await update.message.reply_text(f"Спасибо! Ваша геолокация сохранена: широта={latitude}, долгота={longitude}")
@@ -42,4 +52,7 @@ def main():
 
 
 if __name__ == '__main__':
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'showmytrip.settings')
+    django.setup()
+    from showmap.models import UserLocation
     main()
